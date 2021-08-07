@@ -1,0 +1,7 @@
+# roxygen support
+data-raw
+
+# temporary
+scripts
+^.*\.Rproj$
+^\.Rproj\.user$
