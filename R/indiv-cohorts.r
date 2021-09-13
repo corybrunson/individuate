@@ -10,10 +10,8 @@
 #' @importFrom rlang "%||%"
 
 #' @param data A data frame, used as the corpus.
-#' @param new_data A data frame of index cases, or from which the index cases
-#'   are drawn. If not provided, it is taken to be `data`.
-#' @param ids An integer vector of row names or numbers used to slice cases from
-#'   `new_data`.
+#' @param new_data A data frame of index cases, or an integer vector of row
+#'   names or numbers used to slice cases from `data`.
 #' @param simil_method A character value, passed to the `method` parameter of
 #'   [proxy::simil()].
 #' @param threshold A numeric value that similarities between each index case
@@ -25,15 +23,16 @@
 #'   itself (of the form `*_weight`).
 #' @param .full_cohorts Logical; whether to retain a column of cohorts in
 #'   addition to a column of their index sets with respect to `data`.
-#' @return A tibble with columns `row` (`ids`), `new_datum` (each use case
-#'   formatted as a one-row data frame), `idx` (the row numbers in `new_data` of
-#'   the constructed individual cohort), and, optionally, `cohort` (the
+#' @return A tibble with columns `row` (either `seq(nrow(new_data))` or
+#'   `new_data`, depending on `new_data`), `new_datum` (each use case formatted
+#'   as a one-row data frame), `idx` (the row numbers in `data` of the
+#'   constructed individual cohort), and, optionally, `cohort` (the
 #'   individualized cohort, formatted as a data frame).
 #' @example inst/examples/ex-indiv-cohorts.r
 
 #' @export
 indiv_cohorts <- function(
-  data, new_data = NULL, ids = NULL, simil_method = "cosine",
+  data, new_data = NULL, simil_method = "cosine",
   threshold = NULL, cardinality = NULL, ties_method = "min",
   weight = "constant",
   .full_cohorts = TRUE
@@ -46,12 +45,15 @@ indiv_cohorts <- function(
   }
   
   # if testing data not provided, default to training data and flag this action
-  if (self <- is.null(new_data)) new_data <- data
-  # default to all rows of `new_data`
-  if (is.null(ids)) {
-    ids <- seq(nrow(new_data))
+  if (self <- is.null(new_data)) {
+    ids <- seq(nrow(data))
+    new_data <- data
+  } else if (self <- is.numeric(new_data)) {
+    ids <- as.integer(new_data)
+    new_data <- data[new_data, , drop = FALSE]
   } else {
-    new_data <- dplyr::ungroup(dplyr::slice(new_data, ids))
+    stopifnot(is.data.frame(new_data))
+    ids <- seq(nrow(new_data))
   }
   # default specs
   if (is.null(simil_method)) simil_method <- "cosine"

@@ -7,7 +7,6 @@
 indiv_cohorts(
   data,
   new_data = NULL,
-  ids = NULL,
   simil_method = "cosine",
   threshold = NULL,
   cardinality = NULL,
@@ -19,11 +18,8 @@ indiv_cohorts(
 \arguments{
 \item{data}{A data frame, used as the corpus.}
 
-\item{new_data}{A data frame of index cases, or from which the index cases
-are drawn. If not provided, it is taken to be \code{data}.}
-
-\item{ids}{An integer vector of row names or numbers used to slice cases from
-\code{new_data}.}
+\item{new_data}{A data frame of index cases, or an integer vector of row
+names or numbers used to slice cases from \code{data}.}
 
 \item{simil_method}{A character value, passed to the \code{method} parameter of
 \code{\link[proxy:dist]{proxy::simil()}}.}
@@ -43,9 +39,10 @@ itself (of the form \verb{*_weight}).}
 addition to a column of their index sets with respect to \code{data}.}
 }
 \value{
-A tibble with columns \code{row} (\code{ids}), \code{new_datum} (each use case
-formatted as a one-row data frame), \code{idx} (the row numbers in \code{new_data} of
-the constructed individual cohort), and, optionally, \code{cohort} (the
+A tibble with columns \code{row} (either \code{seq(nrow(new_data))} or
+\code{new_data}, depending on \code{new_data}), \code{new_datum} (each use case formatted
+as a one-row data frame), \code{idx} (the row numbers in \code{data} of the
+constructed individual cohort), and, optionally, \code{cohort} (the
 individualized cohort, formatted as a data frame).
 }
 \description{
@@ -63,7 +60,7 @@ mtcars_new <- sample(seq(nrow(mtcars)), 3L)
 mtcars_form <- as.formula(mpg ~ cyl + disp + hp)
 mtcars_mod <- lm(mtcars_form, mtcars)
 mtcars_cohorts <- indiv_cohorts(
-  mtcars, ids = mtcars_new, simil_method = "correlation",
+  mtcars, new_data = mtcars_new, simil_method = "correlation",
   threshold = .9, cardinality = 6L, ties_method = "min"
 )
 mtcars_cohorts \%>\%
@@ -80,7 +77,7 @@ tibble::tibble(
   im_pred = mtcars_fits$pred
 )
 mtcars_cohorts <- indiv_cohorts(
-  mtcars, ids = mtcars_new, simil_method = "correlation",
+  mtcars, new_data = mtcars_new, simil_method = "correlation",
   threshold = .9, cardinality = 6L, ties_method = "min", .full_cohorts = FALSE
 )
 mtcars_cohorts \%>\%
