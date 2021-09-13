@@ -23,7 +23,7 @@
 #' @param ties_method passed to the `ties.method` parameter of [rank()].
 #' @param weight The name of a weight object (a character value) or an object
 #'   itself (of the form `*_weight`).
-#' @param .keep_cohorts Logical; whether to retain a column of cohorts in
+#' @param .full_cohorts Logical; whether to retain a column of cohorts in
 #'   addition to a column of their index sets with respect to `data`.
 #' @return A tibble with columns `row` (`ids`), `new_datum` (each use case
 #'   formatted as a one-row data frame), `idx` (the row numbers in `new_data` of
@@ -36,7 +36,7 @@ indiv_cohorts <- function(
   data, new_data = NULL, ids = NULL, simil_method = "cosine",
   threshold = NULL, cardinality = NULL, ties_method = "min",
   weight = "constant",
-  .keep_cohorts = TRUE
+  .full_cohorts = TRUE
 ) {
   
   # find `*_weight()` function if it exists
@@ -63,33 +63,19 @@ indiv_cohorts <- function(
   
   # calculate similarities between training set and (subset of) testing set
   simils <- proxy::simil(data, new_data, method = simil_method, by_rows = TRUE)
-  # convert to list
-  # -+- introduces memory overflow -+-
-  simils <- lapply(seq(ncol(simils)), function(i) simils[, i, drop = TRUE])
   # exclude selves
   if (self) {
-    simils <- lapply(
-      seq_along(ids),
-      function(i) {
-        simils[[i]][setdiff(seq(length(simils[[i]])), ids[[i]])]
-        #simils[setdiff(seq(nrow(data)), ids[[i]]), i, drop = FALSE]
-      }
-    )
+    for (i in seq(ncol(simils))) {
+      simils[[ids[[i]], i]] <- NA_real_
+    }
   }
   # identify nearest neighbors
-  ranks <- lapply(simils, function(s) rank(-s, ties.method = ties_method))
-  idxs <- lapply(seq_along(simils), function(i) {
+  idxs <- lapply(seq(ncol(simils)), function(i) {
     unname(which(
-      simils[[i]] > (threshold %||% 0) &
-        ranks[[i]] <= (cardinality %||% Inf)
+      simils[, i] > (threshold %||% 0) &
+        rank(-simils[, i], ties.method = ties_method) <= (cardinality %||% Inf)
     ))
   })
-  # adjust for excluded selves
-  if (self) {
-    idxs <- lapply(seq_along(idxs), function(i) {
-      idxs[[i]] + (idxs[[i]] >= ids[[i]])
-    })
-  }
   # calculate weights of neighbors
   wts <- lapply(
     seq_along(idxs),
@@ -99,11 +85,14 @@ indiv_cohorts <- function(
   # create individualized cohorts
   cohorts <- tibble::tibble(
     idx = idxs,
-    cohort = if (.keep_cohorts) {
-      purrr::map(idxs, ~ dplyr::slice(data, .x))
-    } else NULL,
     weights = wts
   )
+  if (.full_cohorts) {
+    cohorts <- dplyr::mutate(
+      cohorts,
+      cohort = purrr::map(idxs, ~ dplyr::slice(data, .x))
+    )
+  }
   dplyr::bind_cols(
     tidyr::nest(dplyr::mutate(new_data, row = dplyr::row_number()),
                 new_datum = -row),

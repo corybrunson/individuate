@@ -13,7 +13,7 @@ indiv_cohorts(
   cardinality = NULL,
   ties_method = "min",
   weight = "constant",
-  .keep_cohorts = TRUE
+  .full_cohorts = TRUE
 )
 }
 \arguments{
@@ -39,7 +39,7 @@ individualized cohort (up to rank ties).}
 \item{weight}{The name of a weight object (a character value) or an object
 itself (of the form \verb{*_weight}).}
 
-\item{.keep_cohorts}{Logical; whether to retain a column of cohorts in
+\item{.full_cohorts}{Logical; whether to retain a column of cohorts in
 addition to a column of their index sets with respect to \code{data}.}
 }
 \value{
@@ -68,6 +68,27 @@ mtcars_cohorts <- indiv_cohorts(
 )
 mtcars_cohorts \%>\%
   dplyr::mutate(fit = purrr::map(cohort, ~ lm(mtcars_form, .x))) \%>\%
+  dplyr::mutate(pred = purrr::map2_dbl(
+    new_datum, fit,
+    ~ predict(.y, newdata = .x)
+  )) \%>\%
+  print() ->
+  mtcars_fits
+tibble::tibble(
+  response = mtcars$mpg[mtcars_new],
+  lm_pred = predict(mtcars_mod, dplyr::slice(mtcars, mtcars_new)),
+  im_pred = mtcars_fits$pred
+)
+mtcars_cohorts <- indiv_cohorts(
+  mtcars, ids = mtcars_new, simil_method = "correlation",
+  threshold = .9, cardinality = 6L, ties_method = "min", .full_cohorts = FALSE
+)
+mtcars_cohorts \%>\%
+  # how much memory is allocated here?
+  dplyr::mutate(fit = purrr::map(
+    idx,
+    ~ lm(mtcars_form, dplyr::slice(mtcars, .x))
+  )) \%>\%
   dplyr::mutate(pred = purrr::map2_dbl(
     new_datum, fit,
     ~ predict(.y, newdata = .x)
