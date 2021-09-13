@@ -23,17 +23,20 @@
 #' @param ties_method passed to the `ties.method` parameter of [rank()].
 #' @param weight The name of a weight object (a character value) or an object
 #'   itself (of the form `*_weight`).
+#' @param .keep_cohorts Logical; whether to retain a column of cohorts in
+#'   addition to a column of their index sets with respect to `data`.
 #' @return A tibble with columns `row` (`ids`), `new_datum` (each use case
 #'   formatted as a one-row data frame), `idx` (the row numbers in `new_data` of
-#'   the constructed individual cohort), and `cohort` (the individualized
-#'   cohort, formatted as a data frame).
+#'   the constructed individual cohort), and, optionally, `cohort` (the
+#'   individualized cohort, formatted as a data frame).
 #' @example inst/examples/ex-indiv-cohorts.r
 
 #' @export
 indiv_cohorts <- function(
   data, new_data = NULL, ids = NULL, simil_method = "cosine",
   threshold = NULL, cardinality = NULL, ties_method = "min",
-  weight = "constant"
+  weight = "constant",
+  .keep_cohorts = TRUE
 ) {
   
   # find `*_weight()` function if it exists
@@ -61,6 +64,7 @@ indiv_cohorts <- function(
   # calculate similarities between training set and (subset of) testing set
   simils <- proxy::simil(data, new_data, method = simil_method, by_rows = TRUE)
   # convert to list
+  # -+- introduces memory overflow -+-
   simils <- lapply(seq(ncol(simils)), function(i) simils[, i, drop = TRUE])
   # exclude selves
   if (self) {
@@ -95,7 +99,9 @@ indiv_cohorts <- function(
   # create individualized cohorts
   cohorts <- tibble::tibble(
     idx = idxs,
-    cohort = purrr::map(idxs, ~ dplyr::slice(data, .x)),
+    cohort = if (.keep_cohorts) {
+      purrr::map(idxs, ~ dplyr::slice(data, .x))
+    } else NULL,
     weights = wts
   )
   dplyr::bind_cols(

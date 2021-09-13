@@ -12,7 +12,8 @@ indiv_cohorts(
   threshold = NULL,
   cardinality = NULL,
   ties_method = "min",
-  weight = "constant"
+  weight = "constant",
+  .keep_cohorts = TRUE
 )
 }
 \arguments{
@@ -37,12 +38,15 @@ individualized cohort (up to rank ties).}
 
 \item{weight}{The name of a weight object (a character value) or an object
 itself (of the form \verb{*_weight}).}
+
+\item{.keep_cohorts}{Logical; whether to retain a column of cohorts in
+addition to a column of their index sets with respect to \code{data}.}
 }
 \value{
 A tibble with columns \code{row} (\code{ids}), \code{new_datum} (each use case
 formatted as a one-row data frame), \code{idx} (the row numbers in \code{new_data} of
-the constructed individual cohort), and \code{cohort} (the individualized
-cohort, formatted as a data frame).
+the constructed individual cohort), and, optionally, \code{cohort} (the
+individualized cohort, formatted as a data frame).
 }
 \description{
 An individualized cohort for a case \eqn{x} consists of the most similar, or
@@ -54,12 +58,13 @@ number or a similarity threshold. When the index cases are drawn from the
 corpus, they are excluded from their own cohorts.
 }
 \examples{
+set.seed(0)
 mtcars_new <- sample(seq(nrow(mtcars)), 3L)
 mtcars_form <- as.formula(mpg ~ cyl + disp + hp)
 mtcars_mod <- lm(mtcars_form, mtcars)
 mtcars_cohorts <- indiv_cohorts(
   mtcars, ids = mtcars_new, simil_method = "correlation",
-  threshold = .5, cardinality = 6L, ties_method = "max"
+  threshold = .9, cardinality = 6L, ties_method = "min"
 )
 mtcars_cohorts \%>\%
   dplyr::mutate(fit = purrr::map(cohort, ~ lm(mtcars_form, .x))) \%>\%
