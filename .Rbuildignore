@@ -1,6 +1,9 @@
 # roxygen support
 data-raw
 
+# sandbox
+sandbox
+
 # temporary
 scripts
 ^.*\.Rproj$

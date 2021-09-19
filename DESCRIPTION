@@ -19,6 +19,7 @@ LazyData: true
 Depends:
     R (>= 2.10),
     rlang,
+    magrittr,
     recipes
 Suggests:
     tibble,

@@ -35,7 +35,7 @@ indiv_cohorts <- function(
   data, new_data = NULL, simil_method = "cosine",
   threshold = NULL, cardinality = NULL, ties_method = "min",
   weight = "constant",
-  .full_cohorts = TRUE
+  .full_cohorts = FALSE
 ) {
   
   # find `*_weight()` function if it exists
@@ -78,6 +78,9 @@ indiv_cohorts <- function(
         rank(-simils[, i], ties.method = ties_method) <= (cardinality %||% Inf)
     ))
   })
+  # compute each cohort's radius and cardinality
+  thrs <- vapply(seq(ncol(simils)), function(i) min(simils[idxs[[i]], i]), 0)
+  cards <- vapply(idxs, length, 0L)
   # calculate weights of neighbors
   wts <- lapply(
     seq_along(idxs),
@@ -86,7 +89,9 @@ indiv_cohorts <- function(
   
   # create individualized cohorts
   cohorts <- tibble::tibble(
+    row = ids,
     idx = idxs,
+    threshold = thrs, cardinality = cards,
     weights = wts
   )
   if (.full_cohorts) {
@@ -95,11 +100,7 @@ indiv_cohorts <- function(
       cohort = purrr::map(idxs, ~ dplyr::slice(data, .x))
     )
   }
-  dplyr::bind_cols(
-    tidyr::nest(dplyr::mutate(new_data, row = dplyr::row_number()),
-                new_datum = -row),
-    cohorts
-  )
+  cohorts
 }
 
 # adapted from `scales::trans_new`
