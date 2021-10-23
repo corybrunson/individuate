@@ -12,9 +12,7 @@
 
 #' @import recipes
 #' @import Matrix
-#' @importClassesFrom Matrix Matrix dMatrix CsparseMatrix ngCMatrix
 #' @importClassesFrom arules transactions itemMatrix
-#' @importMethodsFrom Matrix t
 #' @importFrom arules items
 
 #' @param recipe A recipe object. The step will be added to the sequence of
