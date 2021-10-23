@@ -68,21 +68,20 @@ step_binarize_new <- function(
 }
 
 #' @export
-prep
-
-#' @export
 prep.step_binarize <- function(x, training, info = NULL, ...) {
   col_names <- terms_select(terms = x$terms, info = info)
   check_type(training[, col_names])
+  
   # prepare reference values of `pass` and/or `fail`?
   if (is.null(x$pass) && is.null(x$fail))
     rlang::abort("One of `pass` and `fail` must be non-null.")
   if (length(intersect(x$pass, x$fail)) > 0L)
     rlang::abort("`pass` and `fail` values must be disjoint.")
+  
   step_binarize_new(
     terms = col_names,
-    trained = TRUE,
     role = x$role,
+    trained = TRUE,
     pass = x$pass, fail = x$fail,
     skip = x$skip,
     id = x$id
@@ -111,9 +110,6 @@ binarize_by <- function(x, pass = NULL, fail = NULL) {
   if (! NA %in% union(pass, fail)) xb[is.na(x)] <- NA
   as.integer(xb)
 }
-
-#' @export
-bake
 
 #' @export
 bake.step_binarize <- function(object, new_data, ...) {
