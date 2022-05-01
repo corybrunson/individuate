@@ -74,7 +74,7 @@ indiv_cohorts <- function(
   # identify nearest neighbors
   idxs <- lapply(seq(ncol(simils)), function(i) {
     unname(which(
-      simils[, i] > (threshold %||% 0) &
+      simils[, i] > (threshold %||% -Inf) &
         rank(-simils[, i], ties.method = ties_method) <= (cardinality %||% Inf)
     ))
   })
