@@ -20,7 +20,8 @@
 #'   individualized cohort (up to rank ties).
 #' @param ties_method passed to the `ties.method` parameter of [rank()].
 #' @param weight The name of a weight object (a character value) or an object
-#'   itself (of the form `*_weight`).
+#'   itself (of the form `*_weight`). If `NULL`, the default, no weights are
+#'   calculated.
 #' @param .full_cohorts Logical; whether to retain a column of cohorts in
 #'   addition to a column of their index sets with respect to `data`.
 #' @return A tibble with columns `row` (either `seq(nrow(new_data))` or
@@ -34,14 +35,16 @@
 indiv_cohorts <- function(
   data, new_data = NULL, simil_method = "cosine",
   threshold = NULL, cardinality = NULL, ties_method = "min",
-  weight = "constant",
+  weight = NULL,
   .full_cohorts = FALSE
 ) {
   
-  # find `*_weight()` function if it exists
-  if (is.character(weight) && exists(paste0(weight, "_weight"))) {
-    weight <- get(paste0(weight, "_weight"))
-    weight <- weight()
+  if (! is.null(weight)) {
+    # find `*_weight()` function if it exists
+    if (is.character(weight) && exists(paste0(weight, "_weight"))) {
+      weight <- get(paste0(weight, "_weight"))
+      weight <- weight()
+    }
   }
   
   # if testing data not provided, default to training data and flag this action
@@ -82,7 +85,7 @@ indiv_cohorts <- function(
   thrs <- vapply(seq(ncol(simils)), function(i) min(simils[idxs[[i]], i]), 0)
   cards <- vapply(idxs, length, 0L)
   # calculate weights of neighbors
-  wts <- lapply(
+  wts <- if (is.null(weight)) NULL else lapply(
     seq_along(idxs),
     function(i) weight$calculation(simils[[i]][idxs[[i]]])
   )

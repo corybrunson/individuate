@@ -73,19 +73,6 @@ toy_data <- data.frame(
     c("a", "b", "d"),
     c("a", "b", "d", "e")
   )),
-  part = rep(c("train", "test"), each = 3L),
-  stringsAsFactors = FALSE
-)
-toy_data <- tibble(
-  id = LETTERS[seq(21L, 26L)],
-  letter = list(
-    c("a", "b", "d"),
-    c("a", "b", "c"),
-    c("b", "d"),
-    c("b"),
-    c("a", "b", "d"),
-    c("a", "b", "d", "e")
-  ),
   part = rep(c("train", "test"), each = 3L)
 )
 # each part contains values missing from the other
@@ -100,7 +87,7 @@ toy_data \%>\%
   toy_rec
 
 # preprocess training data
-juice(toy_rec)
+bake(toy_rec, new_data = NULL)
 
 # preprocess testing data
 toy_data \%>\%

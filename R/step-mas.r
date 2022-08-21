@@ -98,7 +98,8 @@ step_mas_new <- function(
 #' @export
 prep.step_mas <- function(x, training, info = NULL, ...) {
   
-  col_names <- terms_select(terms = x$terms, info = info)
+  # col_names <- terms_select(terms = x$terms, info = info)
+  col_names <- recipes_eval_select(x$terms, training, info = info)
   # check that all columns are list columns
   if (! all(vapply(training[, col_names, drop = FALSE], typeof, "") == "list"))
     rlang::abort("The `mas` step can only transform list columns.")
@@ -272,19 +273,20 @@ bake.step_mas <- function(object, new_data, ...) {
     new_data <- cbind(new_data, dat)
   }
   
-  new_data[, unlist(new_col_names), drop = FALSE]
+  tibble::as_tibble(new_data[, unlist(new_col_names), drop = FALSE])
 }
 
 #' @export
 print.step_mas <- function(
-  x, width = max(20, options()$width - 35), ...
+  x, width = max(20, options()$width - 20), ...
 ) {
-  cat("MAS binarization on ", sep = "")
-  printer(
-    untr_obj = x$terms,
-    tr_obj = NULL,
-    trained = x$trained,
-    width = width
-  )
+  if (x$trained) {
+    cat("MAS patterns from ", sep = "")
+    cat(format_selectors(x$terms, width = width))
+  } else {
+    cat("MAS patterns from ", sep = "")
+    cat(format_selectors(x$terms, width = width))
+  }
+  if (x$trained) cat(" [trained]\n") else cat("\n")
   invisible(x)
 }
