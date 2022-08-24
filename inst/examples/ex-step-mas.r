@@ -23,7 +23,7 @@ toy_data %>%
   toy_rec
 
 # preprocess training data
-juice(toy_rec)
+bake(toy_rec, new_data = NULL)
 
 # preprocess testing data
 toy_data %>%

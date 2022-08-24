@@ -11,7 +11,7 @@ indiv_cohorts(
   threshold = NULL,
   cardinality = NULL,
   ties_method = "min",
-  weight = "constant",
+  weight = NULL,
   .full_cohorts = FALSE
 )
 }
@@ -33,7 +33,8 @@ individualized cohort (up to rank ties).}
 \item{ties_method}{passed to the \code{ties.method} parameter of \code{\link[=rank]{rank()}}.}
 
 \item{weight}{The name of a weight object (a character value) or an object
-itself (of the form \verb{*_weight}).}
+itself (of the form \verb{*_weight}). If \code{NULL}, the default, no weights are
+calculated.}
 
 \item{.full_cohorts}{Logical; whether to retain a column of cohorts in
 addition to a column of their index sets with respect to \code{data}.}
