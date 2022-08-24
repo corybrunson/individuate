@@ -67,7 +67,7 @@ indiv_cohorts <- function(
   )
   
   # calculate similarities between training set and (subset of) testing set
-  simils <- proxy::simil(data, new_data, method = simil_method, by_rows = TRUE)
+  simils <- proxy::simil(as.matrix(data), as.matrix(new_data), method = simil_method, by_rows = TRUE)
   # exclude selves
   if (self) {
     for (i in seq(ncol(simils))) {
